@@ -8,12 +8,15 @@
 </head>
 <body>
     <div class="container admin-container no-print">
-        <header style="display:flex; justify-content:space-between; align-items:center;">
+        <header style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
             <h1>Dashboard Kasir & Dapur</h1>
-            <button id="btn-audio-toggle" onclick="toggleAudioAlert()" class="btn-warning" style="width:auto;">🔔 Aktifkan Suara Notifikasi</button>
+            <div style="display:flex; gap:10px;">
+                <!-- 1. Sakelar Buka / Tutup Warung -->
+                <button id="btn-store-status" onclick="toggleStoreStatus()" class="btn-success" style="width:auto;">🟢 Warung BUKA</button>
+                <button id="btn-audio-toggle" onclick="toggleAudioAlert()" class="btn-warning" style="width:auto;">🔔 Suara Notifikasi</button>
+            </div>
         </header>
 
-        <!-- Audio Alert Notifikasi Order Baru -->
         <audio id="order-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
         
         <section class="admin-grid">
@@ -26,6 +29,8 @@
                 <h2>Tambah Menu</h2>
                 <input type="text" id="nama-menu" placeholder="Nama Menu (misal: Bebek Goreng)">
                 <input type="number" id="harga-menu" placeholder="Harga Dasar (misal: 22000)">
+                <!-- 5. Input Stok Harian -->
+                <input type="number" id="stok-menu" placeholder="Jumlah Stok Harian (misal: 30 porsi)">
                 <select id="kategori-menu">
                     <option value="Makanan">Makanan</option>
                     <option value="Minuman">Minuman</option>
@@ -33,7 +38,7 @@
                 </select>
                 <button onclick="tambahMenu()">Simpan Menu</button>
                 
-                <h2 style="margin-top: 20px;">Daftar Menu</h2>
+                <h2 style="margin-top: 20px;">Daftar Stok Menu</h2>
                 <ul id="admin-menu-list"></ul>
             </div>
         </section>
@@ -56,8 +61,12 @@
             </div>
         </div>
         
+        <!-- 2. Laporan Penjualan & Tombol Tutup Buku Harian -->
         <section class="report-section">
-            <h2>Laporan Penjualan (Pesanan Selesai)</h2>
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+                <h2>Laporan Penjualan Hari Ini</h2>
+                <button onclick="tutupBuku()" class="btn-warning" style="width:auto;">📋 Tutup Buku (Reset)</button>
+            </div>
             <div class="report-box">
                 <h3>Total Pendapatan: Rp <span id="total-revenue">0</span></h3>
             </div>
@@ -65,7 +74,7 @@
         </section>
     </div>
 
-    <!-- Layout Struk Belanja Khusus Printer Thermal (Muncul saat Print) -->
+    <!-- Layout Struk Belanja Kasir -->
     <div id="print-receipt" class="print-only" style="display: none;">
         <div class="receipt-header">
             <h2>PECEL AYAM MANTAP</h2>
@@ -73,7 +82,8 @@
             <p>--------------------------------</p>
         </div>
         <div class="receipt-body">
-            <p><strong>Meja:</strong> <span id="receipt-meja">-</span></p>
+            <!-- 3. Penomoran Antrean di Struk -->
+            <p><strong>Antrean / Meja:</strong> <span id="receipt-meja">-</span></p>
             <p><strong>Waktu:</strong> <span id="receipt-date">-</span></p>
             <p><strong>Metode:</strong> <span id="receipt-payment">-</span></p>
             <p>--------------------------------</p>
