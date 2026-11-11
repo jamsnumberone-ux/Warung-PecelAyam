@@ -2,12 +2,13 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "API_KEY_LU",
-  authDomain: "PROJECT_ID_LU.firebaseapp.com",
-  projectId: "PROJECT_ID_LU",
-  storageBucket: "PROJECT_ID_LU.appspot.com",
-  messagingSenderId: "SENDER_ID_LU",
-  appId: "APP_ID_LU"
+  apiKey: "AIzaSyAq-g27icEVPbCWcKu0zy8n0-FGtuFPMY4",
+  authDomain: "warung-pecel-ayam.firebaseapp.com",
+  projectId: "warung-pecel-ayam",
+  storageBucket: "warung-pecel-ayam.firebasestorage.app",
+  messagingSenderId: "282204921225",
+  appId: "1:282204921225:web:2a9fe3cd28171584f09558",
+  measurementId: "G-HCKK40E24N"
 };
 
 const app = initializeApp(firebaseConfig);
