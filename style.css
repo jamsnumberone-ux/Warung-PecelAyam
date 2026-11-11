@@ -2,11 +2,18 @@
 body { background: #f4f4f9; margin: 0; padding: 15px; color: #333; }
 .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
 
-header { text-align: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; margin-bottom: 20px; }
+header { border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; margin-bottom: 20px; }
 header h1 { margin: 0; color: #ff4757; }
 
-.grid-container, .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
-.card { padding: 15px; border: 1px solid #eee; border-radius: 8px; text-align: center; background: #fafafa; transition: 0.3s; }
+/* Filter Tab Kategori */
+.category-tabs { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
+.tab-btn { background: #eccc68; color: #333; border: none; padding: 8px 16px; border-radius: 20px; font-weight: bold; cursor: pointer; width: auto; white-space: nowrap; }
+.tab-btn.active { background: #ff4757; color: white; }
+
+.grid-container, .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; }
+.card { padding: 15px; border: 1px solid #eee; border-radius: 8px; text-align: center; background: #fafafa; transition: 0.3s; position: relative; }
+.card .category-tag { font-size: 0.75em; background: #dfe4ea; padding: 2px 8px; border-radius: 10px; display: inline-block; margin: 2px 0; }
+.card .price { font-weight: bold; color: #2f3542; margin: 5px 0 10px; }
 .out-of-stock { opacity: 0.5; filter: grayscale(100%); pointer-events: none; }
 
 .order-card { background: #fff8e1; border: 1px solid #ffe082; text-align: left; }
@@ -20,10 +27,17 @@ button.btn-warning { background: #ffa502; margin-top: 10px; }
 button.btn-small { width: auto; margin-top: 0; padding: 5px 10px; }
 
 ul { list-style: none; padding: 0; }
-li { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; }
+li { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
 
-textarea, input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; font-size: 1em; }
+textarea, input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; font-size: 1em; }
 .total { font-weight: 700; font-size: 1.3em; margin: 15px 0; text-align: right; color: #2f3542; }
+
+/* Modal Pop-up */
+.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 999; }
+.modal-content { background: white; padding: 25px; border-radius: 12px; max-width: 400px; width: 90%; text-align: left; }
+.variant-group { margin-bottom: 12px; }
+.modal-buttons { display: flex; gap: 10px; margin-top: 15px; }
+.change-text { font-size: 1.2em; color: #2ed573; text-align: right; margin-top: 10px; }
 
 /* Status Badges */
 .badge { padding: 5px 10px; border-radius: 20px; font-size: 0.8em; font-weight: bold; color: white; display: inline-block; }
@@ -33,3 +47,24 @@ textarea, input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1p
 
 .report-section { margin-top: 30px; padding-top: 20px; border-top: 2px solid #eee; }
 .report-box { background: #f1f2f6; padding: 15px; border-radius: 8px; text-align: center; color: #2f3542; }
+
+/* Print Receipt Styling */
+.print-only { display: none; }
+
+@media print {
+    body * { visibility: hidden; }
+    .no-print { display: none !important; }
+    .print-only, .print-only * { visibility: visible; }
+    .print-only { 
+        display: block !important; 
+        position: absolute; 
+        left: 0; 
+        top: 0; 
+        width: 80mm; 
+        padding: 10px; 
+        font-family: 'Courier New', Courier, monospace; 
+        font-size: 12px; 
+    }
+    .receipt-header, .receipt-footer { text-align: center; }
+    .receipt-header h2 { margin: 0; font-size: 16px; }
+}
