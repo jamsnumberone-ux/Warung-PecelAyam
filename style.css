@@ -14,7 +14,7 @@ header h1 { margin: 0; color: #ff4757; }
 .card { padding: 15px; border: 1px solid #eee; border-radius: 8px; text-align: center; background: #fafafa; transition: 0.3s; position: relative; }
 .card .category-tag { font-size: 0.75em; background: #dfe4ea; padding: 2px 8px; border-radius: 10px; display: inline-block; margin: 2px 0; }
 .card .price { font-weight: bold; color: #2f3542; margin: 5px 0 10px; }
-.out-of-stock { opacity: 0.5; filter: grayscale(100%); pointer-events: none; }
+.out-of-stock { opacity: 0.6; filter: grayscale(100%); pointer-events: none; }
 
 .order-card { background: #fff8e1; border: 1px solid #ffe082; text-align: left; }
 .order-card h3 { margin: 0 0 10px; color: #d32f2f; display:flex; justify-content: space-between; align-items:center; }
@@ -49,19 +49,12 @@ textarea, input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px
 .report-box { background: #f1f2f6; padding: 15px; border-radius: 8px; text-align: center; color: #2f3542; }
 
 /* Print Receipt Styling */
-.print-only { 
-    display: none !important; 
-}
+.print-only { display: none !important; }
+
 @media print {
-    body * { 
-        visibility: hidden !important; 
-    }
-    .no-print { 
-        display: none !important; 
-    }
-    .print-only, .print-only * { 
-        visibility: visible !important; 
-    }
+    body * { visibility: hidden !important; }
+    .no-print { display: none !important; }
+    .print-only, .print-only * { visibility: visible !important; }
     .print-only { 
         display: block !important; 
         position: absolute !important; 
