@@ -1,0 +1,35 @@
+* { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+body { background: #f4f4f9; margin: 0; padding: 15px; color: #333; }
+.container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+
+header { text-align: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; margin-bottom: 20px; }
+header h1 { margin: 0; color: #ff4757; }
+
+.grid-container, .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+.card { padding: 15px; border: 1px solid #eee; border-radius: 8px; text-align: center; background: #fafafa; transition: 0.3s; }
+.out-of-stock { opacity: 0.5; filter: grayscale(100%); pointer-events: none; }
+
+.order-card { background: #fff8e1; border: 1px solid #ffe082; text-align: left; }
+.order-card h3 { margin: 0 0 10px; color: #d32f2f; display:flex; justify-content: space-between; align-items:center; }
+.notes { color: #555; font-style: italic; background: #fff; padding: 5px; border-radius: 4px; }
+
+button { background: #ff4757; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.2s; }
+button.btn-delete { background: #7f8fa6; padding: 5px 10px; width: auto; }
+button.btn-success { background: #2ed573; margin-top: 10px; }
+button.btn-warning { background: #ffa502; margin-top: 10px; }
+button.btn-small { width: auto; margin-top: 0; padding: 5px 10px; }
+
+ul { list-style: none; padding: 0; }
+li { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; }
+
+textarea, input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; font-size: 1em; }
+.total { font-weight: 700; font-size: 1.3em; margin: 15px 0; text-align: right; color: #2f3542; }
+
+/* Status Badges */
+.badge { padding: 5px 10px; border-radius: 20px; font-size: 0.8em; font-weight: bold; color: white; display: inline-block; }
+.badge-pending { background: #ff4757; }
+.badge-cooking { background: #ffa502; }
+.badge-success { background: #2ed573; }
+
+.report-section { margin-top: 30px; padding-top: 20px; border-top: 2px solid #eee; }
+.report-box { background: #f1f2f6; padding: 15px; border-radius: 8px; text-align: center; color: #2f3542; }
