@@ -1,13 +1,46 @@
 import { db } from './firebase-config.js';
 import { collection, addDoc, deleteDoc, doc, onSnapshot, updateDoc, query, orderBy, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+const ADMIN_PIN = "1234"; // Ubah angka ini jika mau ganti PIN Kasir
 let soundEnabled = false;
 let isInitialLoad = true;
 let isStoreOpen = true;
 let activeOrderForCalc = null;
 let currentCompletedOrders = [];
 
-// 1. SAKELAR BUKA / TUTUP WARUNG REAL-TIME
+// 1. VERIFIKASI PIN ADMIN
+window.checkPin = () => {
+    const input = document.getElementById('input-pin').value;
+    if (input === ADMIN_PIN) {
+        document.getElementById('pin-modal').style.display = 'none';
+        document.getElementById('admin-main-container').style.display = 'block';
+        requestWakeLock();
+    } else {
+        document.getElementById('pin-error').style.display = 'block';
+    }
+};
+
+// 3. FITUR SCREEN WAKE LOCK (PENAHAN LAYAR DAPUR TETAP NYALA)
+let wakeLock = null;
+async function requestWakeLock() {
+    try {
+        if ('wakeLock' in navigator) {
+            wakeLock = await navigator.wakeLock.request('screen');
+            document.getElementById('wake-lock-status').innerText = '💡 Penahan Layar: Aktif';
+        }
+    } catch (err) {
+        document.getElementById('wake-lock-status').innerText = '⚠️ Penahan Layar: Tidak Didukung';
+    }
+}
+
+// Relock saat aplikasi dibuka kembali dari background
+document.addEventListener('visibilitychange', async () => {
+    if (wakeLock !== null && document.visibilityState === 'visible') {
+        await requestWakeLock();
+    }
+});
+
+// SAKELAR BUKA / TUTUP WARUNG REAL-TIME
 onSnapshot(doc(db, "settings", "store"), (docSnap) => {
     if (docSnap.exists()) {
         isStoreOpen = docSnap.data().isOpen;
@@ -70,8 +103,6 @@ onSnapshot(qOrders, (snapshot) => {
 
     snapshot.forEach((docData) => {
         const order = { id: docData.id, ...docData.data() };
-        
-        // 2. Filter pesanan yang sudah di-tutup buku (archived)
         if (order.archived) return;
 
         const itemDetails = order.items.map(i => {
@@ -83,7 +114,6 @@ onSnapshot(qOrders, (snapshot) => {
                 ? `<button class="btn-warning" onclick="updateStatus('${order.id}', 'dimasak')">Mulai Masak</button>`
                 : `<button class="btn-success" onclick="openCalcModal('${order.id}')">Selesai & Cetak Struk</button>`;
             
-            // 3. Tampilan Penomoran Meja/Antrean Otomatis
             orderContainer.innerHTML += `
                 <div class="card order-card">
                     <h3>${order.meja} <span class="badge badge-${order.status === 'pending' ? 'pending' : 'cooking'}">${order.status.toUpperCase()}</span></h3>
@@ -114,7 +144,7 @@ window.updateStatus = async (id, newStatus) => {
     await updateDoc(doc(db, "orders", id), { status: newStatus });
 };
 
-// 2. FITUR TUTUP BUKU / RESET LAPORAN HARIAN
+// TUTUP BUKU & RESET LAPORAN
 window.tutupBuku = async () => {
     if (currentCompletedOrders.length === 0) {
         return alert("Belum ada transaksi selesai untuk ditutup buku!");
@@ -125,8 +155,6 @@ window.tutupBuku = async () => {
     
     if (konfirmasi) {
         const tglStr = new Date().toLocaleDateString('id-ID');
-        
-        // Simpan rekap omzet ke koleksi Firestore daily_reports
         await addDoc(collection(db, "daily_reports"), {
             tanggal: tglStr,
             totalOmzet: totalOmzet,
@@ -134,17 +162,39 @@ window.tutupBuku = async () => {
             timestamp: new Date()
         });
 
-        // Tandai pesanan yang sudah selesai sebagai archived
         const updatePromises = currentCompletedOrders.map(o => 
             updateDoc(doc(db, "orders", o.id), { archived: true })
         );
         await Promise.all(updatePromises);
         
-        alert("Tutup Buku Berhasil! Omzet hari ini telah diarsipkan dan tampilan di-reset ke Rp 0.");
+        alert("Tutup Buku Berhasil! Omzet hari ini telah diarsipkan.");
     }
 };
 
-// KALKULATOR KEMBALIAN & STRUK
+// 4. LOAD RIWAYAT TUTUP BUKU (OMZET HARIAN)
+const qReports = query(collection(db, "daily_reports"), orderBy("timestamp", "desc"));
+onSnapshot(qReports, (snapshot) => {
+    const historyList = document.getElementById('history-reports-list');
+    historyList.innerHTML = '';
+    if(snapshot.empty) {
+        historyList.innerHTML = `<li>Belum ada riwayat tutup buku.</li>`;
+        return;
+    }
+    snapshot.forEach((docData) => {
+        const report = docData.data();
+        historyList.innerHTML += `
+            <li>
+                <div>
+                    <strong>📅 Tanggal: ${report.tanggal}</strong><br>
+                    <small>Total Transaksi: ${report.totalTransaksi} Pesanan</small>
+                </div>
+                <strong style="color:#2ed573; font-size:1.1em;">Rp ${report.totalOmzet.toLocaleString('id-ID')}</strong>
+            </li>
+        `;
+    });
+});
+
+// KALKULATOR KEMBALIAN & PRINT
 window.openCalcModal = (orderId) => {
     onSnapshot(doc(db, "orders", orderId), (docData) => {
         activeOrderForCalc = { id: docData.id, ...docData.data() };
@@ -201,7 +251,7 @@ window.processPaymentAndPrint = async () => {
     window.print();
 };
 
-// 5. MANAJEMEN JUMLAH STOK HARIAN (LIST & TAMBAH/EDIT)
+// MANAJEMEN MENU & 2. INPUT URL FOTO PRODUK
 onSnapshot(collection(db, "menus"), (snapshot) => {
     const list = document.getElementById('admin-menu-list');
     list.innerHTML = '';
@@ -230,6 +280,7 @@ window.tambahMenu = async () => {
     const nama = document.getElementById('nama-menu').value;
     const harga = document.getElementById('harga-menu').value;
     const stok = document.getElementById('stok-menu').value;
+    const gambar = document.getElementById('gambar-menu').value;
     const kategori = document.getElementById('kategori-menu').value;
     
     if(!nama || !harga || stok === '') return alert("Isi nama, harga, dan jumlah stok harian!");
@@ -238,12 +289,14 @@ window.tambahMenu = async () => {
         nama, 
         harga: parseInt(harga), 
         stok: parseInt(stok),
+        gambar: gambar || '',
         kategori: kategori
     });
     
     document.getElementById('nama-menu').value = '';
     document.getElementById('harga-menu').value = '';
     document.getElementById('stok-menu').value = '';
+    document.getElementById('gambar-menu').value = '';
 };
 
 window.editStok = async (id, stokSaatIni) => {
