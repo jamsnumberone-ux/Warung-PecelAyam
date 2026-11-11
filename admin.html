@@ -7,8 +7,14 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container admin-container">
-        <h1>Dashboard Admin</h1>
+    <div class="container admin-container no-print">
+        <header style="display:flex; justify-content:space-between; align-items:center;">
+            <h1>Dashboard Kasir & Dapur</h1>
+            <button id="btn-audio-toggle" onclick="toggleAudioAlert()" class="btn-warning" style="width:auto;">🔔 Aktifkan Suara Notifikasi</button>
+        </header>
+
+        <!-- Audio Alert Notifikasi Order Baru -->
+        <audio id="order-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
         
         <section class="admin-grid">
             <div class="live-orders">
@@ -18,14 +24,37 @@
 
             <div class="form-menu">
                 <h2>Tambah Menu</h2>
-                <input type="text" id="nama-menu" placeholder="Nama Menu">
-                <input type="number" id="harga-menu" placeholder="Harga">
-                <button onclick="tambahMenu()">Simpan</button>
+                <input type="text" id="nama-menu" placeholder="Nama Menu (misal: Bebek Goreng)">
+                <input type="number" id="harga-menu" placeholder="Harga Dasar (misal: 22000)">
+                <select id="kategori-menu">
+                    <option value="Makanan">Makanan</option>
+                    <option value="Minuman">Minuman</option>
+                    <option value="Sampingan">Sampingan</option>
+                </select>
+                <button onclick="tambahMenu()">Simpan Menu</button>
                 
                 <h2 style="margin-top: 20px;">Daftar Menu</h2>
                 <ul id="admin-menu-list"></ul>
             </div>
         </section>
+
+        <!-- Modal Kalkulator Kembalian & Struk -->
+        <div id="calc-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <h3>Selesaikan & Cetak Struk</h3>
+                <p>Total Tagihan: <strong>Rp <span id="modal-total-bill">0</span></strong></p>
+                
+                <label>Uang Diterima (Rp):</label>
+                <input type="number" id="input-cash" placeholder="Masukan nominal bayar..." oninput="calculateChange()">
+                
+                <p class="change-text">Kembalian: <strong>Rp <span id="modal-change">0</span></strong></p>
+
+                <div class="modal-buttons">
+                    <button class="btn-success" onclick="processPaymentAndPrint()">Cetak Struk & Selesai</button>
+                    <button class="btn-delete" onclick="closeCalcModal()">Batal</button>
+                </div>
+            </div>
+        </div>
         
         <section class="report-section">
             <h2>Laporan Penjualan (Pesanan Selesai)</h2>
@@ -35,6 +64,32 @@
             <ul id="completed-orders-list"></ul>
         </section>
     </div>
+
+    <!-- Layout Struk Belanja Khusus Printer Thermal (Muncul saat Print) -->
+    <div id="print-receipt" class="print-only">
+        <div class="receipt-header">
+            <h2>PECEL AYAM MANTAP</h2>
+            <p>Jl. Raya Pecel No. 88, Bekasi</p>
+            <p>--------------------------------</p>
+        </div>
+        <div class="receipt-body">
+            <p><strong>Meja:</strong> <span id="receipt-meja">-</span></p>
+            <p><strong>Waktu:</strong> <span id="receipt-date">-</span></p>
+            <p><strong>Metode:</strong> <span id="receipt-payment">-</span></p>
+            <p>--------------------------------</p>
+            <div id="receipt-items"></div>
+            <p>--------------------------------</p>
+            <p><strong>Total: Rp <span id="receipt-total">0</span></strong></p>
+            <p>Bayar: Rp <span id="receipt-cash">0</span></p>
+            <p>Kembali: Rp <span id="receipt-change">0</span></p>
+        </div>
+        <div class="receipt-footer">
+            <p>--------------------------------</p>
+            <p>Terima Kasih Atas Kunjungan Anda!</p>
+            <p>Selamat Menikmati 🙏</p>
+        </div>
+    </div>
+
     <script type="module" src="admin.js"></script>
 </body>
 </html>
