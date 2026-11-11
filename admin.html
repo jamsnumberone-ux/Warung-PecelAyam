@@ -7,11 +7,26 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container admin-container no-print">
+    <!-- 1. Modal Proteksi PIN Admin -->
+    <div id="pin-modal" class="modal" style="display: flex;">
+        <div class="modal-content" style="text-align: center; max-width: 320px;">
+            <h2 style="margin-top:0; color:#ff4757;">🔒 Akses Admin</h2>
+            <p>Masukkan PIN 4-digit kasir/admin:</p>
+            <input type="password" id="input-pin" maxlength="4" placeholder="****" style="text-align:center; font-size:1.5em; letter-spacing:5px;">
+            <button onclick="checkPin()" class="btn-success" style="margin-top:15px;">Masuk Dashboard</button>
+            <p id="pin-error" style="color:#ff4757; display:none; margin-top:10px; font-weight:bold;">PIN Salah, coba lagi!</p>
+        </div>
+    </div>
+
+    <!-- Container Dashboard (Disembunyikan sebelum PIN benar) -->
+    <div id="admin-main-container" class="container admin-container no-print" style="display: none;">
         <header style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-            <h1>Dashboard Kasir & Dapur</h1>
+            <div>
+                <h1 style="margin:0;">Dashboard Kasir & Dapur</h1>
+                <!-- 3. Indikator Screen Wake Lock -->
+                <small id="wake-lock-status" style="color:#2ed573; font-weight:bold;">💡 Penahan Layar: Aktif</small>
+            </div>
             <div style="display:flex; gap:10px;">
-                <!-- 1. Sakelar Buka / Tutup Warung -->
                 <button id="btn-store-status" onclick="toggleStoreStatus()" class="btn-success" style="width:auto;">🟢 Warung BUKA</button>
                 <button id="btn-audio-toggle" onclick="toggleAudioAlert()" class="btn-warning" style="width:auto;">🔔 Suara Notifikasi</button>
             </div>
@@ -29,8 +44,9 @@
                 <h2>Tambah Menu</h2>
                 <input type="text" id="nama-menu" placeholder="Nama Menu (misal: Bebek Goreng)">
                 <input type="number" id="harga-menu" placeholder="Harga Dasar (misal: 22000)">
-                <!-- 5. Input Stok Harian -->
                 <input type="number" id="stok-menu" placeholder="Jumlah Stok Harian (misal: 30 porsi)">
+                <!-- 2. Input URL Foto Produk -->
+                <input type="text" id="gambar-menu" placeholder="URL Foto Produk (opsional)">
                 <select id="kategori-menu">
                     <option value="Makanan">Makanan</option>
                     <option value="Minuman">Minuman</option>
@@ -61,7 +77,6 @@
             </div>
         </div>
         
-        <!-- 2. Laporan Penjualan & Tombol Tutup Buku Harian -->
         <section class="report-section">
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
                 <h2>Laporan Penjualan Hari Ini</h2>
@@ -71,6 +86,12 @@
                 <h3>Total Pendapatan: Rp <span id="total-revenue">0</span></h3>
             </div>
             <ul id="completed-orders-list"></ul>
+        </section>
+
+        <!-- 4. Section Riwayat Tutup Buku / Omzet Harian -->
+        <section class="report-section" style="margin-top: 25px;">
+            <h2>📜 Riwayat Omzet Harian (Tutup Buku)</h2>
+            <ul id="history-reports-list" style="background: #fafafa; padding: 10px; border-radius: 8px;"></ul>
         </section>
     </div>
 
@@ -82,7 +103,6 @@
             <p>--------------------------------</p>
         </div>
         <div class="receipt-body">
-            <!-- 3. Penomoran Antrean di Struk -->
             <p><strong>Antrean / Meja:</strong> <span id="receipt-meja">-</span></p>
             <p><strong>Waktu:</strong> <span id="receipt-date">-</span></p>
             <p><strong>Metode:</strong> <span id="receipt-payment">-</span></p>
