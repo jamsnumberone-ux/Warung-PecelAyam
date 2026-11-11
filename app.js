@@ -4,7 +4,6 @@ import { collection, addDoc, onSnapshot, doc, serverTimestamp, updateDoc, increm
 const urlParams = new URLSearchParams(window.location.search);
 let rawMeja = urlParams.get('meja');
 
-// 3. Penomoran Antrean Otomatis untuk Takeaway / Bungkus
 let noMeja = rawMeja ? `Meja ${rawMeja}` : `Bungkus #B-${Math.floor(100 + Math.random() * 900)}`;
 document.getElementById('info-meja').innerText = noMeja;
 
@@ -13,14 +12,12 @@ let menus = [];
 let selectedMenuForVariant = null;
 let currentCategory = 'semua';
 
-// 1. Sakelar Buka / Tutup Warung Real-time
 onSnapshot(doc(db, "settings", "store"), (docSnap) => {
     const isClosed = docSnap.exists() && docSnap.data().isOpen === false;
     document.getElementById('store-closed-banner').style.display = isClosed ? 'block' : 'none';
     document.getElementById('main-content').style.display = isClosed ? 'none' : 'block';
 });
 
-// 5. Load Menu & Manajemen Jumlah Stok Harian Real-time
 onSnapshot(collection(db, "menus"), (snapshot) => {
     menus = [];
     snapshot.forEach((docData) => {
@@ -53,10 +50,13 @@ function renderMenuList() {
     filteredMenus.forEach((data) => {
         const sisaStok = data.stok !== undefined ? parseInt(data.stok) : 0;
         
-        // 5. Render stok & status ketersediaan berbasis angka
+        // 2. Render foto produk jika URL-nya ada
+        const imgTag = data.gambar ? `<img src="${data.gambar}" class="menu-img" alt="${data.nama}" onerror="this.style.display='none'">` : '';
+
         if(sisaStok > 0) {
             menuContainer.innerHTML += `
                 <div class="card">
+                    ${imgTag}
                     <h4>${data.nama}</h4>
                     <p class="category-tag">${data.kategori || 'Makanan'}</p>
                     <p class="price">Rp ${data.harga.toLocaleString('id-ID')}</p>
@@ -67,6 +67,7 @@ function renderMenuList() {
         } else {
             menuContainer.innerHTML += `
                 <div class="card out-of-stock">
+                    ${imgTag}
                     <h4>${data.nama}</h4>
                     <p class="price">Rp ${data.harga.toLocaleString('id-ID')}</p>
                     <p style="color:#ff4757; font-weight:bold;">Stok Habis</p>
@@ -160,7 +161,6 @@ window.checkout = async () => {
     try {
         const totalHarga = cart.reduce((sum, item) => sum + parseInt(item.harga), 0);
         
-        // Simpan dokumen pesanan ke Firestore
         const orderRef = await addDoc(collection(db, "orders"), {
             meja: noMeja,
             items: cart,
@@ -172,7 +172,6 @@ window.checkout = async () => {
             timestamp: serverTimestamp()
         });
 
-        // 5. Kurangi Jumlah Stok Harian di Firebase Secara Otomatis
         for (let item of cart) {
             if (item.id) {
                 await updateDoc(doc(db, "menus", item.id), {
@@ -204,7 +203,6 @@ window.checkout = async () => {
     }
 };
 
-// 4. Update Status Pesanan & Indikator Estimasi Waktu Tunggu Real-time
 function trackOrder(orderId) {
     onSnapshot(doc(db, "orders", orderId), (docData) => {
         if(!docData.exists()) return;
