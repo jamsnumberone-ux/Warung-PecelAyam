@@ -1,16 +1,26 @@
 import { db } from './firebase-config.js';
-import { collection, addDoc, onSnapshot, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { collection, addDoc, onSnapshot, doc, serverTimestamp, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const urlParams = new URLSearchParams(window.location.search);
-const noMeja = urlParams.get('meja') || 'Bungkus / Kasir';
-document.getElementById('info-meja').innerText = `Meja: ${noMeja}`;
+let rawMeja = urlParams.get('meja');
+
+// 3. Penomoran Antrean Otomatis untuk Takeaway / Bungkus
+let noMeja = rawMeja ? `Meja ${rawMeja}` : `Bungkus #B-${Math.floor(100 + Math.random() * 900)}`;
+document.getElementById('info-meja').innerText = noMeja;
 
 let cart = [];
 let menus = [];
 let selectedMenuForVariant = null;
 let currentCategory = 'semua';
 
-// Load menu real-time dari Firebase
+// 1. Sakelar Buka / Tutup Warung Real-time
+onSnapshot(doc(db, "settings", "store"), (docSnap) => {
+    const isClosed = docSnap.exists() && docSnap.data().isOpen === false;
+    document.getElementById('store-closed-banner').style.display = isClosed ? 'block' : 'none';
+    document.getElementById('main-content').style.display = isClosed ? 'none' : 'block';
+});
+
+// 5. Load Menu & Manajemen Jumlah Stok Harian Real-time
 onSnapshot(collection(db, "menus"), (snapshot) => {
     menus = [];
     snapshot.forEach((docData) => {
@@ -41,12 +51,16 @@ function renderMenuList() {
     }
 
     filteredMenus.forEach((data) => {
-        if(data.tersedia !== false) {
+        const sisaStok = data.stok !== undefined ? parseInt(data.stok) : 0;
+        
+        // 5. Render stok & status ketersediaan berbasis angka
+        if(sisaStok > 0) {
             menuContainer.innerHTML += `
                 <div class="card">
                     <h4>${data.nama}</h4>
                     <p class="category-tag">${data.kategori || 'Makanan'}</p>
                     <p class="price">Rp ${data.harga.toLocaleString('id-ID')}</p>
+                    <p style="font-size:0.85em; color:#2ed573; font-weight:bold;">Sisa Stok: ${sisaStok} porsi</p>
                     <button onclick="openVariantModal('${data.id}')">Pilih / Tambah</button>
                 </div>
             `;
@@ -54,7 +68,8 @@ function renderMenuList() {
             menuContainer.innerHTML += `
                 <div class="card out-of-stock">
                     <h4>${data.nama}</h4>
-                    <p>Habis</p>
+                    <p class="price">Rp ${data.harga.toLocaleString('id-ID')}</p>
+                    <p style="color:#ff4757; font-weight:bold;">Stok Habis</p>
                 </div>
             `;
         }
@@ -66,8 +81,8 @@ window.openVariantModal = (id) => {
     if(!selectedMenuForVariant) return;
 
     document.getElementById('modal-item-name').innerText = selectedMenuForVariant.nama;
+    document.getElementById('modal-item-stock').innerText = `Sisa Stok Siap Masak: ${selectedMenuForVariant.stok} porsi`;
     
-    // Tampilkan opsi varian spesifik jika berupa Makanan Utama (Ayam/Bebek/Lele)
     const isFood = (selectedMenuForVariant.kategori || 'Makanan') === 'Makanan';
     document.getElementById('group-nasi').style.display = isFood ? 'block' : 'none';
     document.getElementById('group-potongan').style.display = isFood ? 'block' : 'none';
@@ -99,14 +114,13 @@ window.confirmAddToCart = () => {
         variantText.push(nasi, `Potongan: ${potongan}`, sambal);
     }
 
-    const itemToAdd = {
+    cart.push({
         id: selectedMenuForVariant.id,
         nama: selectedMenuForVariant.nama,
         harga: baseHarga,
         variantInfo: variantText.length > 0 ? variantText.join(' | ') : ''
-    };
+    });
 
-    cart.push(itemToAdd);
     renderCart();
     closeVariantModal();
 };
@@ -145,6 +159,8 @@ window.checkout = async () => {
     
     try {
         const totalHarga = cart.reduce((sum, item) => sum + parseInt(item.harga), 0);
+        
+        // Simpan dokumen pesanan ke Firestore
         const orderRef = await addDoc(collection(db, "orders"), {
             meja: noMeja,
             items: cart,
@@ -152,11 +168,22 @@ window.checkout = async () => {
             payment: payment,
             total: totalHarga,
             status: 'pending',
+            archived: false,
             timestamp: serverTimestamp()
         });
+
+        // 5. Kurangi Jumlah Stok Harian di Firebase Secara Otomatis
+        for (let item of cart) {
+            if (item.id) {
+                await updateDoc(doc(db, "menus", item.id), {
+                    stok: increment(-1)
+                });
+            }
+        }
         
         document.getElementById('main-content').style.display = 'none';
         document.getElementById('order-tracking').style.display = 'block';
+        document.getElementById('track-meja').innerText = noMeja;
         
         const trackList = document.getElementById('track-items-list');
         trackList.innerHTML = '';
@@ -177,21 +204,31 @@ window.checkout = async () => {
     }
 };
 
+// 4. Update Status Pesanan & Indikator Estimasi Waktu Tunggu Real-time
 function trackOrder(orderId) {
     onSnapshot(doc(db, "orders", orderId), (docData) => {
         if(!docData.exists()) return;
         const statusData = docData.data().status;
         const badge = document.getElementById('status-badge');
+        const estBox = document.getElementById('est-time-box');
         
         if(statusData === 'pending') {
             badge.className = 'badge badge-pending';
-            badge.innerText = 'Menunggu Dapur';
+            badge.innerText = 'Menunggu Konfirmasi Dapur';
+            estBox.innerText = '⏱️ Estimasi Waktu Tunggu: 15 - 20 Menit';
+            estBox.style.background = '#eccc68';
         } else if(statusData === 'dimasak') {
             badge.className = 'badge badge-cooking';
-            badge.innerText = 'Sedang Dimasak';
+            badge.innerText = 'Sedang Dimasak 🍳';
+            estBox.innerText = '🔥 Pesanan Lagi Digoreng! Estimasi Disajikan: 5 - 10 Menit Lagi';
+            estBox.style.background = '#ffa502';
+            estBox.style.color = '#fff';
         } else if(statusData === 'selesai') {
             badge.className = 'badge badge-success';
-            badge.innerText = 'Pesanan Selesai / Diantar';
+            badge.innerText = 'Pesanan Selesai / Diantar 🎉';
+            estBox.innerText = '✅ Pesanan Siap Dinikmati! Terima Kasih 🙏';
+            estBox.style.background = '#2ed573';
+            estBox.style.color = '#fff';
         }
     });
 }
