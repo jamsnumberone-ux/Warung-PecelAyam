@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Pecel Ayam</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container admin-container">
+        <h1>Dashboard Admin</h1>
+        
+        <section class="admin-grid">
+            <div class="live-orders">
+                <h2>Live Order Dapur</h2>
+                <div id="order-list"></div>
+            </div>
+
+            <div class="form-menu">
+                <h2>Tambah Menu</h2>
+                <input type="text" id="nama-menu" placeholder="Nama Menu">
+                <input type="number" id="harga-menu" placeholder="Harga">
+                <button onclick="tambahMenu()">Simpan</button>
+                
+                <h2 style="margin-top: 20px;">Daftar Menu</h2>
+                <ul id="admin-menu-list"></ul>
+            </div>
+        </section>
+        
+        <section class="report-section">
+            <h2>Laporan Penjualan (Pesanan Selesai)</h2>
+            <div class="report-box">
+                <h3>Total Pendapatan: Rp <span id="total-revenue">0</span></h3>
+            </div>
+            <ul id="completed-orders-list"></ul>
+        </section>
+    </div>
+    <script type="module" src="admin.js"></script>
+</body>
+</html>
